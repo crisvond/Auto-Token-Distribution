@@ -13,6 +13,7 @@ This project provides a smart contract-based solution for distributing ERC20 rew
 - [Prerequisites](#prerequisites)
 - [Environment Variables](#environment-variables)
 - [Smart Contract Deployment](#smart-contract-deployment)
+- [Setting Parameters on Deployment](#setting-parameters-on-deployment)
 - [Running the Snapshot Service](#running-the-snapshot-service)
 - [Setting Up Chainlink Keepers](#setting-up-chainlink-keepers)
 - [Testing and Deployment](#testing-and-deployment)
@@ -185,6 +186,46 @@ If you are using **Hardhat** or **Truffle** for contract deployment, ensure the 
 4. **Update Contract Address**:
    - Once the contracts are deployed, update the `CONTRACT_ADDRESS` and `NFT_CONTRACT_ADDRESS` in the `.env.local` file.
 
+### Setting Parameters on Deployment
+
+When deploying the `autoclainchainlink.sol` contract, you need to provide the following parameters in the constructor:
+
+- **NFT Contract Address**: The address of the deployed ERC721 NFT contract.
+- **Reward Token Address**: The address of the deployed ERC20 reward token contract.
+- **Reward Per NFT**: The amount of reward each NFT holder will receive (in wei).
+- **Reserved Tokens**: The initial amount of tokens reserved for rewards (in wei).
+
+Here’s an example of how to set these parameters in your deployment script:
+
+```javascript
+const { ethers } = require("hardhat");
+
+async function main() {
+    const [deployer] = await ethers.getSigners();
+
+    // Addresses for the NFT and ERC20 contracts
+    const nftContractAddress = "0xYourNFTContractAddress"; // Replace with your NFT contract address
+    const rewardTokenAddress = "0xYourERC20TokenAddress"; // Replace with your ERC20 token address
+
+    // Reward per NFT and reserved tokens
+    const rewardPerNFT = ethers.utils.parseUnits("10", 18); // Example: 10 tokens per NFT
+    const reservedTokens = ethers.utils.parseUnits("1000", 18); // Example: 1000 tokens reserved
+
+    // Deploy the AutomatedNFTRewardDistributor contract
+    const AutomatedNFTRewardDistributor = await ethers.getContractFactory("AutomatedNFTRewardDistributor");
+    const distributor = await AutomatedNFTRewardDistributor.deploy(nftContractAddress, rewardTokenAddress, rewardPerNFT, reservedTokens);
+
+    console.log("AutomatedNFTRewardDistributor deployed to:", distributor.address);
+}
+
+main()
+    .then(() => process.exit(0))
+    .catch((error) => {
+        console.error(error);
+        process.exit(1);
+    });
+```
+
 ### 2. Verify the Contracts
 
 Once the contracts are deployed, you can verify them using **Etherscan** if you're deploying to Ethereum mainnet or a testnet:
@@ -332,4 +373,4 @@ If you have any questions, feel free to reach out:
 
 ---
 
-Feel free to explore the code and modify the project according to your needs.
+Feel free to explore the code and modify the project according to your needs..
