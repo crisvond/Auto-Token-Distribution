@@ -1,7 +1,6 @@
+# ERC20 Rewards to NFT Holder Distribution System
 
-# ERC20 rewards to NFT holder Distribution System
-
-This project contains a smart contract-based solution to distribute ERC20 rewards to NFT holders. The system includes different contracts and an off-chain service for managing NFT ownership snapshots and reward distributions.
+This project provides a smart contract-based solution for distributing ERC20 rewards to NFT holders. The system includes various contracts and an off-chain service for managing NFT ownership snapshots and reward distributions.
 
 ## Table of Contents
 
@@ -24,7 +23,7 @@ This project contains a smart contract-based solution to distribute ERC20 reward
 
 ## Overview
 
-This project automates the process of distributing ERC20 rewards to NFT holders by managing NFT ownership data and facilitating the distribution process based on that data. The project supports both manual and automated reward distribution mechanisms.
+This project automates the distribution of ERC20 rewards to NFT holders by managing NFT ownership data and facilitating the distribution process based on that data. The project supports both manual and automated reward distribution mechanisms.
 
 ## Project Structure
 
@@ -192,4 +191,3 @@ If you have any questions, feel free to reach out:
 ---
 
 Feel free to explore the code and modify the project according to your needs.
-
