@@ -53,6 +53,26 @@ contract AutomatedNFTRewardDistributor is Ownable, ReentrancyGuard, AutomationCo
         lastDistributionTime = block.timestamp; // Initialize to current time
     }
 
+    // New function to update the NFT contract address
+    function setNFTContract(address _nftContractAddress) external onlyOwner {
+        nftContract = IERC721(_nftContractAddress);
+    }
+
+    // New function to update the reward token address
+    function setRewardToken(address _rewardTokenAddress) external onlyOwner {
+        rewardToken = IERC20(_rewardTokenAddress);
+    }
+
+    // New function to update the reward per NFT
+    function setRewardPerNFT(uint256 _rewardPerNFT) external onlyOwner {
+        rewardPerNFT = _rewardPerNFT;
+    }
+
+    // New function to update the reserved tokens
+    function setReservedTokens(uint256 _reservedTokens) external onlyOwner {
+        reservedTokens = _reservedTokens;
+    }
+
     // Check if upkeep is needed (Chainlink Keeper function)
     function checkUpkeep(bytes calldata) external view override returns (bool upkeepNeeded, bytes memory) {
         upkeepNeeded = (block.timestamp >= lastDistributionTime + 24 hours) && !paused;
