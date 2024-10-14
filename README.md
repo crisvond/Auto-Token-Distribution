@@ -123,6 +123,10 @@ The `autoclainchainlink.sol` contract automates the reward distribution process 
 - **emergencyWithdraw**: Allows the owner to withdraw remaining reward tokens from the contract in case of an emergency.
 - **pauseDistribution**: Allows the owner to pause the distribution process in case of an emergency.
 - **resumeDistribution**: Allows the owner to resume the distribution process after it has been paused.
+- **setNFTContract**: Allows the owner to update the NFT contract address.
+- **setRewardToken**: Allows the owner to update the ERC20 reward token address.
+- **setRewardPerNFT**: Allows the owner to update the reward amount per NFT.
+- **setReservedTokens**: Allows the owner to update the amount of reserved tokens.
 
 ## Prerequisites
 
