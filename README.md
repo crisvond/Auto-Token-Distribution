@@ -8,6 +8,8 @@ This project provides a smart contract-based solution for distributing ERC20 rew
 - [Project Structure](#project-structure)
 - [Contract Solutions](#contract-solutions)
 - [Off-Chain Snapshot Service](#off-chain-snapshot-service)
+- [Understanding `snapshot.js`](#understanding-snapshotjs)
+- [Understanding `autoclainchainlink.sol`](#understanding-autoclainchainlinksol)
 - [Prerequisites](#prerequisites)
 - [Environment Variables](#environment-variables)
 - [Smart Contract Deployment](#smart-contract-deployment)
@@ -54,6 +56,142 @@ This project automates the distribution of ERC20 rewards to NFT holders by manag
 ## Off-Chain Snapshot Service
 
 The `snapshot.js` file is an off-chain service that automates the process of taking NFT ownership snapshots and updating the Merkle root on-chain.
+
+### 1. Install Node.js Dependencies
+
+Before running the service, install the required dependencies:
+
+```bash
+npm install ethers merkletreejs keccak256 dotenv winston
+```
+
+### 2. Run the Snapshot Service
+
+```bash
+node snapshot.js
+```
+
+This script will:
+- Fetch all NFT ownership data.
+- Generate a Merkle tree from the ownership data.
+- Update the contract with the new Merkle root.
+
+## Understanding `snapshot.js`
+
+The `snapshot.js` script is responsible for automating the process of taking snapshots of NFT ownership and updating the Merkle root in the smart contract. Here’s a breakdown of its key components:
+
+1. **Environment Variables**: The script uses environment variables to configure the connection to the Ethereum network and the contract addresses. Ensure that your `.env.local` file is correctly set up with the required values.
+
+2. **Logging**: The script uses the `winston` library for logging, which helps track the execution flow and any errors that occur during the process.
+
+3. **Retry Logic**: The `retryOperation` function implements a retry mechanism with exponential backoff for operations that may fail due to network issues, ensuring robustness.
+
+4. **Batch Fetching**: The `fetchNFTOwnersBatch` function retrieves NFT owners in batches to avoid timeouts. This is crucial for contracts with a large number of NFTs.
+
+5. **Merkle Tree Generation**: The `generateMerkleTree` function creates a Merkle tree from the fetched NFT ownership data, which is then used to verify claims.
+
+6. **Updating the Merkle Root**: The `updateMerkleRoot` function estimates gas for the transaction and updates the Merkle root in the smart contract.
+
+7. **Main Function**: The `snapshotAndUpdate` function orchestrates the entire process, from fetching NFT owners to updating the contract.
+
+## Understanding `autoclainchainlink.sol`
+
+The `autoclainchainlink.sol` contract automates the reward distribution process using Chainlink Keepers. Here’s a detailed explanation of its components:
+
+### Contract Initialization
+
+- **Constructor Parameters**:
+  - `address _nftContractAddress`: The address of the deployed ERC721 NFT contract.
+  - `address _rewardTokenAddress`: The address of the deployed ERC20 reward token contract.
+  - `uint256 _rewardPerNFT`: The amount of reward each NFT holder will receive.
+  - `uint256 _reservedTokens`: The initial amount of tokens reserved for rewards.
+
+### Key Functions
+
+1. **checkUpkeep**: 
+   - This function is called by Chainlink Keepers to check if the contract needs upkeep. It returns `true` if the last distribution was more than 24 hours ago and the contract is not paused.
+
+2. **performUpkeep**: 
+   - This function is executed by Chainlink Keepers when `checkUpkeep` returns `true`. It calls the `distributeRewards` function to distribute rewards to NFT holders.
+
+3. **distributeRewards**: 
+   - This internal function distributes rewards to all NFT holders. It checks the total supply of NFTs, validates token existence, and transfers the reward tokens to each owner. It also updates the last distribution timestamp and deducts the distributed tokens from the reserved pool.
+
+### Owner Functions
+
+- **addReservedTokens**: Allows the owner to add more tokens to the reserved pool for future distributions.
+- **emergencyWithdraw**: Allows the owner to withdraw remaining reward tokens from the contract in case of an emergency.
+- **pauseDistribution**: Allows the owner to pause the distribution process in case of an emergency.
+- **resumeDistribution**: Allows the owner to resume the distribution process after it has been paused.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+1. **Node.js** (>= v14.x)
+   - [Download Node.js](https://nodejs.org/en/download/)
+2. **Solidity** (>= 0.8.0)
+   - Solidity compiler is typically built into Ethereum development tools like **Hardhat** or **Truffle**.
+3. **Infura or Alchemy Account**:
+   - Sign up for Infura [here](https://infura.io/) to get an API key for interacting with the Ethereum blockchain.
+4. **Metamask Wallet**:
+   - You'll need a wallet with sufficient ETH for deploying the contracts and running transactions.
+
+## Environment Variables
+
+Create a `.env.local` file in the root directory of the project. It should contain the following:
+
+```ini
+INFURA_PROJECT_ID=your-infura-project-id  # Infura project ID for Ethereum connection
+PRIVATE_KEY=your-private-key              # Wallet private key for deploying contracts and sending transactions
+CONTRACT_ADDRESS=your-reward-contract-address    # Address of the deployed reward distribution contract
+NFT_CONTRACT_ADDRESS=your-nft-contract-address # Address of the deployed NFT contract
+```
+
+**Note**: Never expose your private key publicly. Use secure vault solutions (AWS Secrets Manager, Azure Key Vault) for production environments.
+
+## Smart Contract Deployment
+
+### 1. Compile and Deploy the Contracts
+
+If you are using **Hardhat** or **Truffle** for contract deployment, ensure the dependencies are installed, and follow these steps:
+
+1. **Install dependencies**:
+
+   ```bash
+   npm install
+   ```
+
+2. **Compile the contracts**:
+
+   ```bash
+   npx hardhat compile  # or truffle compile
+   ```
+
+3. **Deploy the contracts**:
+
+   For **Hardhat**:
+
+   ```bash
+   npx hardhat run scripts/deploy.js --network <network>
+   ```
+
+   Replace `<network>` with the network you're deploying to (e.g., `rinkeby`, `goerli`, or `mainnet`).
+
+4. **Update Contract Address**:
+   - Once the contracts are deployed, update the `CONTRACT_ADDRESS` and `NFT_CONTRACT_ADDRESS` in the `.env.local` file.
+
+### 2. Verify the Contracts
+
+Once the contracts are deployed, you can verify them using **Etherscan** if you're deploying to Ethereum mainnet or a testnet:
+
+```bash
+npx hardhat verify --network <network> <contract-address>
+```
+
+## Running the Snapshot Service
+
+The `snapshot.js` file is the off-chain service that automates the process of taking NFT ownership snapshots and updating the Merkle root on-chain.
 
 ### 1. Install Node.js Dependencies
 
