@@ -1,22 +1,19 @@
-# AutoClaim Contract
 
-This project contains a smart contract-based solution to distribute ERC20 rewards to NFT holders using a Merkle tree-based snapshot mechanism. The system includes:
+# ERC20 rewards to NFT holder Distribution System
 
-- **Smart Contracts**: 
-  - `autoclaim.sol`: Contract for distributing rewards without Merkle proofs.
-  - `autoclaimsnap.sol`: Contract for distributing rewards based on Merkle proofs.
-- **Off-chain Snapshot Service**:
-  - `snapshot.js`: A Node.js script that periodically takes snapshots of the NFT ownership and updates the smart contract with the new Merkle root.
-- **Environment Configurations**: `.env.local` for storing sensitive data.
+This project contains a smart contract-based solution to distribute ERC20 rewards to NFT holders. The system includes different contracts and an off-chain service for managing NFT ownership snapshots and reward distributions.
 
 ## Table of Contents
 
 - [Overview](#overview)
 - [Project Structure](#project-structure)
+- [Contract Solutions](#contract-solutions)
+- [Off-Chain Snapshot Service](#off-chain-snapshot-service)
 - [Prerequisites](#prerequisites)
 - [Environment Variables](#environment-variables)
 - [Smart Contract Deployment](#smart-contract-deployment)
 - [Running the Snapshot Service](#running-the-snapshot-service)
+- [Setting Up Chainlink Keepers](#setting-up-chainlink-keepers)
 - [Testing and Deployment](#testing-and-deployment)
 - [Security Considerations](#security-considerations)
 - [Troubleshooting](#troubleshooting)
@@ -27,84 +24,37 @@ This project contains a smart contract-based solution to distribute ERC20 reward
 
 ## Overview
 
-This project automates the process of distributing ERC20 rewards to NFT holders by periodically taking snapshots of the ownership data and updating the contract with a Merkle root. NFT holders can then claim their rewards by submitting a Merkle proof.
+This project automates the process of distributing ERC20 rewards to NFT holders by managing NFT ownership data and facilitating the distribution process based on that data. The project supports both manual and automated reward distribution mechanisms.
 
 ## Project Structure
 
 - **`.env.local`**: Stores environment variables like private keys, Infura project ID, contract addresses, etc.
-- **`autoclaim.sol`**: Smart contract responsible for allowing users to claim rewards based on Merkle proofs.
-- **`autoclaimsnap.sol`**: Contract for handling snapshot-related functionality.
-- **`rewardContractABI.json`**: ABI (Application Binary Interface) file for the `autoclaim` contract.
+- **`autoclaim.sol`**: Contract for distributing rewards based on NFT ownership using Merkle proofs.
+- **`autoclaimsnap.sol`**: Contract for managing NFT ownership snapshots and allowing users to claim rewards based on those snapshots.
+- **`autoclainchainlink.sol`**: Contract for fully automated reward distribution using Chainlink Keepers.
+- **`rewardContractABI.json`**: ABI (Application Binary Interface) file for the reward distribution contracts.
 - **`snapshot.js`**: Off-chain service script that takes snapshots of NFT ownership and updates the contract with the new Merkle root.
 
-## Prerequisites
+## Contract Solutions
 
-Before you begin, ensure you have the following installed:
+### 1. Merkle Tree-Based Reward Claiming (`autoclaim.sol`)
 
-1. **Node.js** (>= v14.x)
-   - [Download Node.js](https://nodejs.org/en/download/)
-2. **Solidity** (>= 0.8.0)
-   - Solidity compiler is typically built into Ethereum development tools like **Hardhat** or **Truffle**.
-3. **Infura or Alchemy Account**:
-   - Sign up for Infura [here](https://infura.io/) to get an API key for interacting with the Ethereum blockchain.
-4. **Metamask Wallet**:
-   - You'll need a wallet with sufficient ETH for deploying the contracts and running transactions.
+- **Description**: Users can claim rewards by submitting a valid Merkle proof. This contract allows for verifying ownership through the Merkle tree.
+- **Manual Trigger**: Users must call `claimReward` with the appropriate proof.
 
-## Environment Variables
+### 2. Snapshot-Based Reward Distribution (`autoclaimsnap.sol`)
 
-Create a `.env.local` file in the root directory of the project. It should contain the following:
+- **Description**: The contract allows the owner to distribute rewards automatically to NFT holders by calling `distributeRewards`, based on a specific range of NFTs.
+- **Manual Trigger**: The owner must manually call `distributeRewards`.
 
-```ini
-INFURA_PROJECT_ID=your-infura-project-id  # Infura project ID for Ethereum connection
-PRIVATE_KEY=your-private-key              # Wallet private key for deploying contracts and sending transactions
-CONTRACT_ADDRESS=your-contract-address    # Address of the deployed reward distribution contract
-NFT_CONTRACT_ADDRESS=your-nft-contract-address # Address of the deployed NFT contract
-```
+### 3. Fully Automated Reward Distribution (`autoclainchainlink.sol`)
 
-**Note**: Never expose your private key publicly. Use secure vault solutions (AWS Secrets Manager, Azure Key Vault) for production environments.
+- **Description**: This contract integrates with Chainlink Keepers to automate the reward distribution process without manual intervention. It checks every 24 hours if the conditions are met for distribution and executes the function if they are.
+- **Automation**: The distribution is fully automated and does not require manual intervention.
 
-## Smart Contract Deployment
+## Off-Chain Snapshot Service
 
-### 1. Compile and Deploy the Contracts
-
-If you are using **Hardhat** or **Truffle** for contract deployment, ensure the dependencies are installed, and follow these steps:
-
-1. **Install dependencies**:
-
-   ```bash
-   npm install
-   ```
-
-2. **Compile the contracts**:
-
-   ```bash
-   npx hardhat compile  # or truffle compile
-   ```
-
-3. **Deploy the contracts**:
-
-   For **Hardhat**:
-
-   ```bash
-   npx hardhat run scripts/deploy.js --network <network>
-   ```
-
-   Replace `<network>` with the network you're deploying to (e.g., `rinkeby`, `goerli`, or `mainnet`).
-
-4. **Update Contract Address**:
-   - Once the contracts are deployed, update the `CONTRACT_ADDRESS` and `NFT_CONTRACT_ADDRESS` in the `.env.local` file.
-
-### 2. Verify the Contracts
-
-Once the contracts are deployed, you can verify them using **Etherscan** if you're deploying to Ethereum mainnet or a testnet:
-
-```bash
-npx hardhat verify --network <network> <contract-address>
-```
-
-## Running the Snapshot Service
-
-The `snapshot.js` file is the off-chain service that automates the process of taking NFT ownership snapshots and updating the Merkle root on-chain.
+The `snapshot.js` file is an off-chain service that automates the process of taking NFT ownership snapshots and updating the Merkle root on-chain.
 
 ### 1. Install Node.js Dependencies
 
@@ -142,6 +92,35 @@ You can automate this script to run at specific intervals (e.g., every 24 hours)
    ```
 
 This will run the script every day at midnight and log the output to `snapshot.log`.
+
+## Setting Up Chainlink Keepers
+
+To fully automate the reward distribution process using Chainlink Keepers, follow these steps:
+
+### 1. Deploy the Contract on a Supported Network
+
+Ensure that your `autoclainchainlink.sol` contract is deployed on a network that supports Chainlink Keepers (e.g., Ethereum mainnet, Goerli).
+
+### 2. Register Your Contract with Chainlink Keepers
+
+1. **Visit the Chainlink Keepers Registry**: Go to the [Chainlink Keepers Registry](https://keepers.chain.link/) and connect your wallet.
+
+2. **Register Your Contract**:
+   - In the interface, select your deployed contract and specify the `checkUpkeep` and `performUpkeep` functions.
+   - Define the conditions under which you want the Keepers to trigger the `performUpkeep()` function (e.g., every 24 hours).
+   - Complete the registration process by providing the necessary details and paying any associated fees.
+
+3. **Verify Registration**: Once your contract is registered, you can verify its status on the Chainlink Keepers Registry. 
+
+### 3. Funding Your Contract
+
+Make sure your contract has enough LINK tokens to fund the Chainlink Keepers service. You can purchase LINK tokens on exchanges and transfer them to your deployed contract address.
+
+### 4. Monitor and Maintain
+
+After setting up Chainlink Keepers:
+- Monitor your contract to ensure it's functioning as expected.
+- Check logs and keep an eye on gas costs to ensure efficient execution.
 
 ## Testing and Deployment
 
@@ -210,3 +189,10 @@ If you have any questions, feel free to reach out:
 2. Implement secure key management for production.
 3. Ensure that the Merkle tree snapshot service runs automatically using cron jobs or any scheduling service.
 
+---
+
+Feel free to explore the code and modify the project according to your needs. If you encounter any issues, don’t hesitate to ask for help!
+
+---
+
+This updated README now includes detailed instructions for setting up Chainlink Keepers, which automates the reward distribution process without manual intervention. Let me know if you need any further adjustments!
