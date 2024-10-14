@@ -191,8 +191,5 @@ If you have any questions, feel free to reach out:
 
 ---
 
-Feel free to explore the code and modify the project according to your needs. If you encounter any issues, don’t hesitate to ask for help!
+Feel free to explore the code and modify the project according to your needs.
 
----
-
-This updated README now includes detailed instructions for setting up Chainlink Keepers, which automates the reward distribution process without manual intervention. Let me know if you need any further adjustments!
