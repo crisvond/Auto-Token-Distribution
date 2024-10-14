@@ -18,6 +18,7 @@ contract NFTRewardDistributor is Ownable, ReentrancyGuard {
 
     bool public paused;                     // Emergency pause flag
     mapping(address => bool) public rewardsClaimed; // Track rewards claimed by users
+    uint256 public lastDistributionTime;    // Timestamp of the last distribution
 
     event MerkleRootUpdated(bytes32 newMerkleRoot);
     event RewardClaimed(address indexed user, uint256 amount);
@@ -25,9 +26,15 @@ contract NFTRewardDistributor is Ownable, ReentrancyGuard {
     event EmergencyPause(bool status);
     event EmergencyResume(bool status);
     event EmergencyWithdraw(address indexed owner, uint256 amount);
+    event AutoRewardDistributed(address indexed user, uint256 amount);
 
     modifier whenNotPaused() {
         require(!paused, "Contract is paused");
+        _;
+    }
+
+    modifier canDistribute() {
+        require(block.timestamp >= lastDistributionTime + 24 hours, "Distribution can only occur once every 24 hours");
         _;
     }
 
@@ -40,12 +47,32 @@ contract NFTRewardDistributor is Ownable, ReentrancyGuard {
         rewardPerNFT = _rewardPerNFT;
         reservedTokens = _reservedTokens;
         paused = false;
+        lastDistributionTime = block.timestamp; // Initialize to current time
     }
 
     // Admin function to set the Merkle root based on off-chain snapshot
     function updateMerkleRoot(bytes32 _merkleRoot) external onlyOwner {
         merkleRoot = _merkleRoot;
         emit MerkleRootUpdated(_merkleRoot);
+    }
+
+    // Automatically distribute rewards to eligible recipients
+    function distributeRewards(address[] calldata recipients, uint256[] calldata amounts) external onlyOwner whenNotPaused canDistribute {
+        require(recipients.length == amounts.length, "Mismatched arrays");
+
+        for (uint256 i = 0; i < recipients.length; i++) {
+            require(!rewardsClaimed[recipients[i]], "Rewards already claimed by this address");
+            require(reservedTokens >= amounts[i], "Insufficient reserved tokens");
+
+            // Transfer the reward tokens
+            rewardToken.transfer(recipients[i], amounts[i]);
+            reservedTokens -= amounts[i];
+            rewardsClaimed[recipients[i]] = true;
+
+            emit AutoRewardDistributed(recipients[i], amounts[i]);
+        }
+
+        lastDistributionTime = block.timestamp; // Update the last distribution time
     }
 
     // Users can claim their rewards by submitting a Merkle proof
